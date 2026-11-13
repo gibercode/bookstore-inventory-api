@@ -1,3 +1,4 @@
+from decimal import Decimal
 from pathlib import Path
 
 from decouple import config
@@ -136,3 +137,14 @@ CORS_ALLOWED_ORIGINS = [
     'http://localhost:3000',
     'http://localhost:5173',
 ]
+
+# Exchange rates (external API)
+EXCHANGE_RATE_API_URL = config(
+    'EXCHANGE_RATE_API_URL', default='https://api.exchangerate-api.com/v4/latest'
+)
+PROFIT_MARGIN_PERCENTAGE = config('PROFIT_MARGIN_PERCENTAGE', default=40, cast=int)
+# Used by calculate-price when the exchange rate API is unavailable.
+DEFAULT_EXCHANGE_RATE = Decimal('911.62')
+LOCAL_CURRENCY = config('LOCAL_CURRENCY', default='VES')
+EXCHANGE_RATE_TIMEOUT = config('EXCHANGE_RATE_TIMEOUT', default=5, cast=float)
+EXCHANGE_RATE_CACHE_TTL = config('EXCHANGE_RATE_CACHE_TTL', default=3600, cast=int)

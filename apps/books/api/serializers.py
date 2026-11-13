@@ -5,8 +5,9 @@ from django.db import IntegrityError, transaction
 from rest_framework import serializers
 
 from apps.books.models import Book, Category
+from apps.core.exceptions import ConflictError
 
-from .validators import isbn13_digits
+from .validators import validate_isbn
 
 MIN_PRICE = Decimal('0.01')
 ISBN_CONSTRAINT = 'unique_book_isbn_digits'
@@ -68,8 +69,8 @@ class BookSerializer(serializers.ModelSerializer):
         }
 
     def validate_isbn(self, value):
-        isbn13_digits(value)
-        return value
+        validate_isbn(value)
+        return value.upper()
 
     def create(self, validated_data):
         try:
@@ -78,9 +79,7 @@ class BookSerializer(serializers.ModelSerializer):
         except IntegrityError as exc:
             if ISBN_CONSTRAINT not in str(exc):
                 raise
-            raise serializers.ValidationError(
-                {'isbn': ['A book with this ISBN already exists.']}
-            )
+            raise ConflictError({'isbn': ['A book with this ISBN already exists.']})
 
     def validate_supplier_country(self, value):
         value = value.upper()
@@ -97,3 +96,15 @@ class LowStockParamsSerializer(serializers.Serializer):
     threshold = serializers.IntegerField(
         min_value=0, max_value=MAX_STOCK, default=DEFAULT_LOW_STOCK_THRESHOLD
     )
+
+
+class PriceCalculationSerializer(serializers.Serializer):
+    book_id = serializers.UUIDField()
+    cost_usd = serializers.DecimalField(max_digits=10, decimal_places=2)
+    exchange_rate = serializers.DecimalField(max_digits=20, decimal_places=6)
+    cost_local = serializers.DecimalField(max_digits=14, decimal_places=2)
+    margin_percentage = serializers.IntegerField()
+    selling_price_local = serializers.DecimalField(max_digits=12, decimal_places=2)
+    currency = serializers.CharField()
+    rate_source = serializers.ChoiceField(choices=['api', 'default'])
+    calculation_timestamp = serializers.DateTimeField()

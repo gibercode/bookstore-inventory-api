@@ -1,15 +1,18 @@
 from drf_spectacular.utils import extend_schema
 from rest_framework import mixins, viewsets
 from rest_framework.decorators import action
+from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 
 from apps.books.models import Book, Category
+from apps.books.services import PriceOutOfRangeError, calculate_selling_price
 
 from .serializers import (
     BookSearchParamsSerializer,
     BookSerializer,
     CategorySerializer,
     LowStockParamsSerializer,
+    PriceCalculationSerializer,
 )
 
 UUID_REGEX = '[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}'
@@ -56,6 +59,17 @@ class BookViewSet(
             stock_quantity__lte=params.validated_data['threshold']
         ).order_by('stock_quantity', 'title', 'id')
         return self._paginated_response(queryset)
+
+    @extend_schema(request=None, responses=PriceCalculationSerializer)
+    @action(detail=True, methods=['post'], url_path='calculate-price')
+    def calculate_price(self, request, pk=None):
+        """Price the book in local currency (current rate + profit margin) and save it."""
+        book = self.get_object()
+        try:
+            result = calculate_selling_price(book)
+        except PriceOutOfRangeError as exc:
+            raise ValidationError({'selling_price_local': [str(exc)]})
+        return Response(PriceCalculationSerializer(result).data)
 
     def _paginated_response(self, queryset):
         page = self.paginate_queryset(queryset)
