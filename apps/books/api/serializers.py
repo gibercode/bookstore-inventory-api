@@ -10,6 +10,8 @@ from .validators import isbn13_digits
 
 MIN_PRICE = Decimal('0.01')
 ISBN_CONSTRAINT = 'unique_book_isbn_digits'
+MAX_STOCK = 2**31 - 1
+DEFAULT_LOW_STOCK_THRESHOLD = 10
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -62,6 +64,7 @@ class BookSerializer(serializers.ModelSerializer):
         extra_kwargs = {
             'cost_usd': {'min_value': MIN_PRICE},
             'selling_price_local': {'min_value': MIN_PRICE},
+            'stock_quantity': {'required': True},
         }
 
     def validate_isbn(self, value):
@@ -84,3 +87,13 @@ class BookSerializer(serializers.ModelSerializer):
         if len(value) != 2 or not value.isalpha():
             raise serializers.ValidationError('Must be a 2-letter ISO country code.')
         return value
+
+
+class BookSearchParamsSerializer(serializers.Serializer):
+    category = CategoryField(queryset=Category.objects.all())
+
+
+class LowStockParamsSerializer(serializers.Serializer):
+    threshold = serializers.IntegerField(
+        min_value=0, max_value=MAX_STOCK, default=DEFAULT_LOW_STOCK_THRESHOLD
+    )
