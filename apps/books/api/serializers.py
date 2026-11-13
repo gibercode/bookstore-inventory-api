@@ -1,3 +1,4 @@
+from contextlib import contextmanager
 from decimal import Decimal
 
 from django.core.exceptions import ValidationError as DjangoValidationError
@@ -73,9 +74,20 @@ class BookSerializer(serializers.ModelSerializer):
         return value.upper()
 
     def create(self, validated_data):
+        with self._isbn_conflict_guard():
+            return super().create(validated_data)
+
+    def update(self, instance, validated_data):
+        with self._isbn_conflict_guard():
+            return super().update(instance, validated_data)
+
+    @staticmethod
+    @contextmanager
+    def _isbn_conflict_guard():
+        """Turn a violation of the unique ISBN constraint into a 409."""
         try:
             with transaction.atomic():
-                return super().create(validated_data)
+                yield
         except IntegrityError as exc:
             if ISBN_CONSTRAINT not in str(exc):
                 raise

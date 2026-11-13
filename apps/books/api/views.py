@@ -28,6 +28,14 @@ class BookViewSet(
     queryset = Book.objects.select_related('category').order_by('title', 'id')
     serializer_class = BookSerializer
 
+    def update(self, request, *args, **kwargs):
+        """Replace a book (PUT). Every required field must be sent."""
+        book = self.get_object()
+        serializer = self.get_serializer(book, data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data)
+
     def destroy(self, request, *args, **kwargs):
         book = self.get_object()
         data = self.get_serializer(book).data
