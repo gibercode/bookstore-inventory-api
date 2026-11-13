@@ -7,6 +7,7 @@ api_prefix = f'{settings.API_PREFIX}/{settings.API_VERSION}/'
 
 api_urlpatterns = [
     path('', include('apps.core.api.urls')),
+    path('', include('apps.books.api.urls')),
 ]
 
 urlpatterns = [

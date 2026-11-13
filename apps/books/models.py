@@ -1,6 +1,8 @@
 import uuid
 
 from django.db import models
+from django.db.models import UniqueConstraint, Value
+from django.db.models.functions import Replace
 
 
 class Category(models.Model):
@@ -19,7 +21,7 @@ class Book(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     title = models.CharField(max_length=255)
     author = models.CharField(max_length=255)
-    isbn = models.CharField(max_length=17, unique=True)
+    isbn = models.CharField(max_length=17)
     cost_usd = models.DecimalField(max_digits=10, decimal_places=2)
     selling_price_local = models.DecimalField(
         max_digits=12, decimal_places=2, null=True, blank=True
@@ -34,6 +36,12 @@ class Book(models.Model):
 
     class Meta:
         ordering = ['title']
+        constraints = [
+            UniqueConstraint(
+                Replace('isbn', Value('-'), Value('')),
+                name='unique_book_isbn_digits',
+            ),
+        ]
 
     def __str__(self):
         return f'{self.title} ({self.isbn})'
