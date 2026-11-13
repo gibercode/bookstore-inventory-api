@@ -6,8 +6,7 @@ from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 api_prefix = f'{settings.API_PREFIX}/{settings.API_VERSION}/'
 
 api_urlpatterns = [
-    path('', include('core.urls')),
-    # path('books/', include('books.urls')),
+    path('', include('apps.core.api.urls')),
 ]
 
 urlpatterns = [

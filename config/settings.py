@@ -21,7 +21,8 @@ INSTALLED_APPS = [
     'corsheaders',
     'drf_spectacular',
 
-    'core',
+    'apps.core',
+    'apps.books',
 ]
 
 MIDDLEWARE = [
@@ -114,11 +115,12 @@ REST_FRAMEWORK = {
         'rest_framework.filters.SearchFilter',
         'rest_framework.filters.OrderingFilter',
     ],
-    'DEFAULT_PAGINATION_CLASS': 'core.pagination.StandardPagination',
+    'DEFAULT_PAGINATION_CLASS': 'apps.core.pagination.StandardPagination',
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.AllowAny',
     ],
-    'EXCEPTION_HANDLER': 'core.exceptions.custom_exception_handler',
+    'EXCEPTION_HANDLER': 'apps.core.exceptions.custom_exception_handler',
+    'COERCE_DECIMAL_TO_STRING': False,
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
 }
 
